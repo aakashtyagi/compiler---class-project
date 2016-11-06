@@ -1,0 +1,227 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.17+ wizard for JavaCC 1.5.0+
+ */options{  JDK_VERSION = "1.5";  static = true;
+}PARSER_BEGIN(EG1)package comp;
+
+public class EG1{
+  static SymbolTable st = new SymbolTable();
+  static Quads qv = new Quads();
+  static SemanticStack s = new SemanticStack();  public static void main(String args []) throws ParseException  {    EG1 parser = new EG1(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression! Please dont copy and paste I hate that for some reason:");//     try//      {        EG1.program();//      }//      catch (Exception e)//      {//        System.out.println("NOK.");//        System.out.println(e.getMessage());//        EG1.ReInit(System.in);//      }//      catch (Error e)//      {//        System.out.println("Oops.");//        System.out.println(e.getMessage());//        break;//      }    }  }}PARSER_END(EG1)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* OPERATORS */{  < PLUS : "+" >| < MINUS : "-" >| < MULTIPLY : "*" >| < DIVIDE : "/" >
+| < MODULO : "%" >
+| < NOT : "!" >
+| < LESS: "<" >
+| < EQUALS : "=" >
+| < EQUALTO : "==" >
+| < GREATER: ">" >
+| < IF : "if" >
+| < ELSE : "else" >
+| < WHILE : "while" >
+| < BREAK : "break" >
+| < CONTINUE : "continue" >
+| < RETURN : "return" >
+| < SEMI : ";" >
+| < AND : "&" >
+| < OR : "|" >
+| < QMARK : "?" >
+| < COLON : ":" >
+| < LPAREN : "(" >
+| < RPAREN : ")" >
+| < LBRACK : "[" >
+| < RBRACK : "]" >
+| < LBRACE : "{" >
+| < RBRACE : "}" >}TOKEN : /* NUMBERS */{ < #DIGIT : ["0"-"9"] >
+| < INTEGER: < DIGIT >( < DIGIT > )* >}
+
+TOKEN : /* LETTERS */
+{
+  < #LETTER : ["A"-"Z", "a"-"z" ] >
+| < ID: < LETTER > ( < LETTER > | < DIGIT > )* >}
+
+TOKEN_MGR_DECLS :
+{
+  static int cn = 0;
+}
+
+SKIP : /* COMMENT */
+{
+  "/*" { cn++; } : IN_COMMENT
+| <  "//" (~["\n"])*"\n" >
+}
+
+<IN_COMMENT> SKIP :
+{
+  "/*" {cn++;}
+  | "*/" { cn--;if(cn==0)SwitchTo(DEFAULT);}
+  | < ~[]>
+}
+
+/****************************
+*GRAMMAR AND PRODUCTION RULES
+*****************************/
+int one_line() :{}{  program()  {    return 0;  }| ";"  {    return 1;  }}void program() :
+{}{
+  < LBRACE > (statement())* < RBRACE > }
+
+void statement() :
+{
+  Quad q;
+  String a,b,jmp,nextq;
+}
+{
+    < WHILE >
+//    {//      a = qv.nextQuad();//      s.push(a);//    }
+    test()
+//    {//      a = s.pop();//      nextq = qv.nextQuad();//      s.push(nextq);//      qv.addQuad("jeqz",a,"_","0");//    }
+	( < LBRACE > (statement())+ <RBRACE > | statement() )
+//    {//      a = s.pop();//      b = s.pop();//      qv.addQuad("jump","_","_",b);//      nextq = qv.nextQuad();//      qv.append(a,b);      //    }
+  | < IF > test()
+//  {//    a = qv.nextQuad();//    b = qv.pop().toString();//    qv.addQuad("jeqz",b,"_","0");//    s.push(a);//  }
+	( < LBRACE > (statement())+ <RBRACE > | statement() )
+  	[ LOOKAHEAD(2) < ELSE >//  {//    a = qv.nextQuad();//    jmp = s.pop();//    qv.addQuad("jump","_","_","0");//    qv.append(a,jmp);//    s.push(a);//  }
+  	( < LBRACE > (statement())+ <RBRACE > | statement() )
+//  {//    nextq = qv.nextQuad();//    a = s.pop();//    qv.append(a,nextq);//  }
+  ]
+  | expression() < SEMI >
+  | < BREAK > < SEMI >
+  | < RETURN > expression() < SEMI >
+  | < CONTINUE > < SEMI >
+  | < SEMI >}
+
+void test() :
+{}{
+  < LPAREN > expression() < RPAREN >}
+void expression() :
+{
+//  String a,b;
+}
+
+{
+  LOOKAHEAD(2)
+  id()
+  < EQUALS >
+  expression()
+//  {//    a = (String)s.pop();//  	b = (String)s.pop();//    qv.addQuad("=",a,"_",b);//  }
+  | condition()
+}
+
+void condition() :
+{}{
+  disjunction() ( < QMARK > expression() < COLON > condition() )?}
+
+void disjunction() :
+{
+//  String b,c,newt;
+}{
+  conjunction() ( < OR > conjunction()
+//  {//    b = s.pop();//    c = s.pop();//    newt = st.newTemp();//    qv.addQuad("|",c,b,newt);//  }
+  )*}
+
+void conjunction() :
+{
+//  String b,c,newt;
+}{
+  comparison() ( < AND > comparison()
+//  {//  	b = s.pop();//    c = s.pop();//    newt = st.newTemp();//    qv.addQuad("&",c,b,newt);//  }
+  )*}
+
+void comparison() :
+{
+//  String b,c,newt;
+}{
+  relation() ( < EQUALTO > relation()
+//  {//  	b = s.pop();//    c = s.pop();//    newt = st.newTemp();//    qv.addQuad("==",c,b,newt);//  }
+  )?}
+
+void relation() :
+{
+//  String b,c,op,newt = "";
+}{
+  sum() ( relop() sum()
+//  {//    b = s.pop();//    op = s.pop();//    c = s.pop();//    newt = st.newTemp();//    qv.addQuad(op,c,b,newt);//  }
+  )?}
+
+void sum() :
+{
+//  String b,c,op,newt= "";
+}
+{
+  term() ( addop() term()
+//  {//    b = s.pop();//    op = s.pop();//    c = s.pop();//    newt = st.newTemp();//    qv.addQuad(op,c,b,newt);//  }
+  )*}
+
+void term() :
+{
+//  String newt,b,c,op;
+}{
+  factor() ( multop() factor()//  {//    b = s.pop();//    op = s.pop();//    c = s.pop();//    newt = st.newTemp();//    qv.addQuad(op,c,b,newt);//  }
+  )*}
+
+void factor() :
+{
+//  String a,op,newt = "";
+}{
+  primary() | unaryop() primary()//  {//    a = s.pop();//    op = s.pop();//    qv.addQuad(op,a,"_",newt);//  }}
+
+void primary() :
+{
+//  String a;
+}
+{
+  id()
+ | < INTEGER >
+// 	{// 	  a = token.toString();// 	  s.push(a);//    }
+ | < LPAREN > expression() < RPAREN >
+// 	{// 	  a = token.toString();//	  s.push(a);// 	}
+}
+
+void id() :
+{
+//  String a;
+}
+{
+  < ID > (< LBRACK > ( <INTEGER > | < ID > ) < RBRACK >)?
+//  {//    a = token.toString();//    s.push(a);//  }
+}
+
+void relop() :
+{
+//  String op;
+}
+{
+  < LESS >
+//  {//    op = "<";//    s.push(op);//  } 
+ | < GREATER >
+//  {//    op = ">";//    s.push(op);//  }
+
+}
+
+void multop() :
+{//  String op;
+}
+{
+   < MULTIPLY >
+//  	{//     op = "*";//     s.push(op);//   	}
+  | < DIVIDE >
+//  	{//    op = "/";//    s.push(op);//  	}
+  | < MODULO >
+//  	{//  	  op = "%";//      s.push(op);//    }
+}
+void addop() :
+{
+//  String op;
+}
+{
+    < PLUS >
+//  	{//     op = "+";//     s.push(op);//   	}
+  | < MINUS >
+//  	{//  	  op = "-";//  	  s.push(op);//  	}
+}
+void unaryop() :
+{
+//  String op;
+}
+{
+  < MINUS >//  {//    op = "-";//	  s.push(op);//  }
+ | < NOT >
+//  {//	op = "!";//	s.push(op);//  }
+}
